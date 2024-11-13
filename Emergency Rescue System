@@ -1,0 +1,72 @@
+#include <iostream>
+#include <vector>
+#include <climits>
+
+using namespace std;
+
+class EmergencyResponseTSP {
+private:
+    int numLocations;
+    vector<vector<int>> distanceMatrix;
+    vector<bool> visited;
+
+public:
+    EmergencyResponseTSP(int n) : numLocations(n), distanceMatrix(n, vector<int>(n)), visited(n, false) {}
+
+    // Method to add distance between two locations
+    void addDistance(int i, int j, int distance) {
+        distanceMatrix[i][j] = distance;
+        distanceMatrix[j][i] = distance;
+    }
+
+    // Greedy algorithm to approximate TSP solution
+    int findRoute(int start = 0) {
+        int currentLocation = start;
+        int totalDistance = 0;
+        visited[currentLocation] = true;
+
+        for (int i = 1; i < numLocations; i++) {
+            int nearestLocation = -1;
+            int shortestDistance = INT_MAX;
+
+            for (int j = 0; j < numLocations; j++) {
+                if (!visited[j] && distanceMatrix[currentLocation][j] < shortestDistance) {
+                    nearestLocation = j;
+                    shortestDistance = distanceMatrix[currentLocation][j];
+                }
+            }
+
+            if (nearestLocation != -1) {
+                visited[nearestLocation] = true;
+                totalDistance += shortestDistance;
+                currentLocation = nearestLocation;
+            }
+        }
+
+        // Returning to the starting point
+        totalDistance += distanceMatrix[currentLocation][start];
+        return totalDistance;
+    }
+};
+
+int main() {
+    int n;
+    cout << "Enter the number of locations: ";
+    cin >> n;
+
+    EmergencyResponseTSP tsp(n);
+
+    cout << "Enter the distance matrix:\n";
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            int dist;
+            cin >> dist;
+            tsp.addDistance(i, j, dist);
+        }
+    }
+
+    int totalDistance = tsp.findRoute();
+    cout << "Approximate minimum distance to cover all locations: " << totalDistance << endl;
+
+    return 0;
+}
