@@ -1,0 +1,114 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+#include <string.h>
+#define MAX_LOCATIONS 100
+
+typedef struct {
+    int id;
+    int priority;
+    char type[20];
+} Location;
+
+typedef struct {
+    int target;
+    int weight;
+} Edge;
+
+int numLocations;
+int timeLimit;
+Location locationDetails[MAX_LOCATIONS];
+int adjacencyMatrix[MAX_LOCATIONS][MAX_LOCATIONS];
+int distances[MAX_LOCATIONS];
+
+void initializeMatrix() {
+    for (int i = 0; i < MAX_LOCATIONS; i++) {
+        for (int j = 0; j < MAX_LOCATIONS; j++) {
+            adjacencyMatrix[i][j] = (i == j) ? 0 : INT_MAX;
+        }
+    }
+}
+void addLocation(int id, int priority, const char *type) {
+    locationDetails[id].id = id;
+    locationDetails[id].priority = priority;
+    strncpy(locationDetails[id].type, type, sizeof(locationDetails[id].type) - 1);
+}
+void addEdge(int from, int to, int distance) {
+    adjacencyMatrix[from][to] = distance;
+    adjacencyMatrix[to][from] = distance;
+}
+void dijkstra(int start) {
+    int visited[MAX_LOCATIONS] = {0};
+    for (int i = 0; i < numLocations; i++) {
+        distances[i] = INT_MAX;
+    }
+    distances[start] = 0;
+    for (int count = 0; count < numLocations - 1; count++) {
+        int minDistance = INT_MAX, u = -1;
+        for (int v = 0; v < numLocations; v++) {
+            if (!visited[v] && distances[v] <= minDistance) {
+                minDistance = distances[v];
+                u = v;
+            }
+        }
+        visited[u] = 1;
+        for (int v = 0; v < numLocations; v++) {
+            if (!visited[v] && adjacencyMatrix[u][v] != INT_MAX &&
+                distances[u] + adjacencyMatrix[u][v] < distances[v]) {
+                distances[v] = distances[u] + adjacencyMatrix[u][v];
+            }
+        }
+    }
+    printf("\nShortest paths from location %d:\n", start);
+    for (int i = 0; i < numLocations; i++) {
+        if (distances[i] <= timeLimit) {
+            printf("Location %d - Distance: %d\n", i, distances[i]);
+        }
+    }
+}
+void visitLocations(int start) {
+    int visited[MAX_LOCATIONS] = {0};
+    printf("Visiting locations based on priority:\n");
+    while (1) {
+        int maxPriority = -1;
+        int nextLocation = -1;
+        for (int i = 0; i < numLocations; i++) {
+            if (!visited[i] && locationDetails[i].priority > maxPriority) {
+                maxPriority = locationDetails[i].priority;
+                nextLocation = i;
+            }
+        }
+        if (nextLocation == -1) break;
+        visited[nextLocation] = 1;
+        printf("Visiting location %d (%s) with priority %d\n", nextLocation, locationDetails[nextLocation].type, maxPriority);
+        dijkstra(nextLocation);
+    }
+}
+int main() {
+    printf("Enter the number of locations: ");
+    scanf("%d", &numLocations);
+    printf("Enter the maximum time limit for each location: ");
+    scanf("%d", &timeLimit);
+    initializeMatrix();
+    printf("Enter the details for each location (ID priority type):\n");
+    for (int i = 0; i < numLocations; i++) {
+        int id, priority;
+        char type[20];
+        scanf("%d %d %s", &id, &priority, type);
+        addLocation(id, priority, type);
+    }
+    int m;
+    printf("Enter the number of edges between locations: ");
+    scanf("%d", &m);
+    printf("Enter the edges (from to distance):\n");
+    for (int i = 0; i < m; i++) {
+        int from, to, distance;
+        scanf("%d %d %d", &from, &to, &distance);
+        addEdge(from, to, distance);
+    }
+    int start;
+    printf("Enter the starting location: ");
+    scanf("%d", &start);
+    visitLocations(start);
+    return 0;
+}
