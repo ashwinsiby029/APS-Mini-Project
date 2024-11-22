@@ -1,0 +1,600 @@
+#include<bits/stdc++.h>
+#include <random>
+
+using namespace std;
+
+struct Stock
+{
+    string symbol;
+    string companyName;
+    double price;
+};
+
+struct Transaction
+{
+    string symbol;
+    int quantity;
+    double price;
+    time_t timestamp;
+};
+
+struct User
+{
+    string username;
+    string password;
+    double cashBalance;
+    map < string, int > portfolio;
+    vector < Transaction > transactionHistory;
+};
+
+class StockMarketSimulator
+{
+private:
+    map < string,
+        User > users;
+    map < string,
+        Stock > stocks;
+
+public:
+    StockMarketSimulator()
+    {
+        addStock("AAPL", "Apple Inc.", 150.0);
+        addStock("GOOGL", "Alphabet Inc.", 2800.0);
+        addStock("AMZN", "Amazon Inc.", 3100.0);
+        addStock("MSFT", "Microsoft Corporation", 300.0);
+        addStock("TSLA", "Tesla Inc.", 800.0);
+        addStock("NVDA", "NVIDIA Corporation", 700.0);
+        addStock("NFLX", "Netflix Inc.", 500.0);
+        addStock("FB", "Meta Platforms Inc.", 300.0);
+        addStock("BABA", "Alibaba Group Holding Limited", 180.0);
+        addStock("T", "AT&T Inc.", 30.0);
+        addStock("BAC", "Bank of America Corporation", 40.0);
+        addStock("BA", "The Boeing Company", 200.0);
+        addStock("CAT", "Caterpillar Inc.", 150.0);
+        addStock("CVX", "Chevron Corporation", 100.0);
+        addStock("CSCO", "Cisco Systems Inc.", 50.0);
+        addStock("KO", "The Coca-Cola Company", 60.0);
+        addStock("DIS", "The Walt Disney Company", 150.0);
+        addStock("DOW", "Dow Inc.", 50.0);
+        addStock("XOM", "Exxon Mobil Corporation", 50.0);
+        addStock("GS", "The Goldman Sachs Group Inc.", 400.0);
+        addStock("HD", "The Home Depot Inc.", 300.0);
+        addStock("IBM", "International Business Machines Corporation", 120.0);
+        addStock("INTC", "Intel Corporation", 50.0);
+        addStock("JNJ", "Johnson & Johnson", 150.0);
+        addStock("JPM", "JPMorgan Chase & Co.", 150.0);
+        addStock("MCD", "McDonald's Corporation", 200.0);
+        addStock("AMD", "Advanced Micro Devices Inc.", 100.0);
+    }
+
+    void start();
+    bool registerUser();
+    bool loginUser();
+    void displayStocks();
+    bool buyStock();
+    bool sellStock();
+    void displayPortfolio();
+    void displayTransactionHistory();
+    void simulatePriceChanges();
+    void addCashBalance();
+    void checkCashBalance();
+    void calculateProfitLoss();
+    void showStockPrice();
+    void updatePassword();
+    void listAllTransactions();
+    void searchUserByUsername();
+
+private:
+    void addStock(const string & symbol,
+                  const string & companyName, double price);
+    bool validateUser(const string & username,
+                      const string & password);
+    void showMainMenu();
+    void showTradingMenu();
+};
+
+void StockMarketSimulator::start()
+{
+    bool exitProgram = false;
+    while (!exitProgram)
+    {
+        showMainMenu();
+        int choice;
+        if (!(cin >> choice))
+        {
+            cin.clear();
+            cin.ignore(10000, '\n');
+            cout << "INVALID INPUT. TRY AGAIN!";
+        }
+        else
+        {
+
+            switch (choice)
+            {
+            case 1:
+                registerUser();
+                break;
+            case 2:
+                loginUser();
+                break;
+            case 3:
+                exitProgram = true;
+                break;
+            default:
+                cout << "Invalid choice. Please try again." << endl;
+                break;
+            }
+
+        }
+
+    }
+}
+
+bool StockMarketSimulator::registerUser()
+{
+    string username, password;
+    cout << "Enter username: ";
+    cin >> username;
+    cout << "Enter password: ";
+    cin >> password;
+    if (users.find(username) != users.end())
+    {
+        cout << "Error: Username already exists." << endl;
+        return false;
+    }
+    users[username] =
+    {
+        username,
+        password,
+        0.0,
+        {},
+        {}
+    };
+    cout << "Registration successful." << endl;
+    return true;
+}
+
+bool StockMarketSimulator::loginUser()
+{
+    std::string username, password;
+    std::cout << "Enter username: ";
+    std::cin >> username;
+    std::cout << "Enter password: ";
+    std::cin >> password;
+
+    if (validateUser(username, password))
+    {
+        std::cout << "Login successful." << std::endl;
+        bool exitTrading = false;
+        while (!exitTrading)
+        {
+            showTradingMenu();
+            int choice;
+            std::cin >> choice;
+
+            if (std::cin.fail())
+            {
+                std::cin.clear();
+                std::cin.ignore(10000, '\n');
+                std::cout << "INVALID INPUT. TRY AGAIN!\n";
+                continue;
+            }
+
+            switch (choice)
+            {
+
+            case 1:
+                buyStock();
+                break;
+
+            case 2:
+                sellStock();
+                break;
+
+            case 3:
+                displayPortfolio();
+                break;
+            case 4:
+                displayTransactionHistory();
+                break;
+
+            case 5:
+                simulatePriceChanges();
+                break;
+
+            case 6:
+                exitTrading = true;
+                break;
+
+            case 7:
+                addCashBalance();
+                break;
+
+            case 8:
+                checkCashBalance();
+                break;
+
+            case 9:
+                calculateProfitLoss();
+                break;
+
+            case 10:
+                showStockPrice();
+                break;
+
+            case 11:
+                updatePassword();
+                break;
+
+            case 12:
+                searchUserByUsername();
+                break;
+
+            default:
+                cout << "Invalid choice. Please try again." << endl;
+                break;
+
+            }
+
+        }
+        return true;
+    }
+    else
+    {
+        cout << "Login failed. Invalid username or password." << endl;
+        return false;
+    }
+}
+
+void StockMarketSimulator::displayStocks()
+{
+    cout << "Available Stocks:" << endl;
+
+    for (const auto & pair: stocks)
+    {
+        cout << "Symbol: " << pair.first << ", Company: " << pair.second.companyName << ", Price: $" << fixed << setprecision(2) << pair.second.price << endl;
+    }
+}
+
+bool StockMarketSimulator::buyStock()
+{
+    std::string username, symbol;
+    int quantity;
+    cout << "Enter your username: ";
+    cin >> username;
+    cout << "Enter stock symbol: ";
+    cin >> symbol;
+    cout << "Enter quantity: ";
+    if (!(cin >> quantity))
+    {
+        cin.clear();
+        cin.ignore(10000, '\n');
+        cout << "INVALID INPUT. TRY AGAIN!\n";
+        return false;
+    }
+    else
+    {
+
+        auto userIt = users.find(username);
+        auto stockIt = stocks.find(symbol);
+        if (userIt != users.end() && stockIt != stocks.end())
+        {
+            double totalCost = stockIt -> second.price * quantity;
+            if (userIt -> second.cashBalance >= totalCost)
+            {
+                userIt -> second.cashBalance -= totalCost;
+                userIt -> second.portfolio[symbol] += quantity;
+                userIt -> second.transactionHistory.push_back(
+                {
+                    symbol,
+                    quantity,
+                    stockIt -> second.price,
+                    time(nullptr)
+                });
+                cout << "Purchase successful." << endl;
+                return true;
+            }
+            else
+            {
+                cout << "Insufficient funds." << endl;
+            }
+        }
+        else
+        {
+            cout << "Stock or user not found." << endl;
+        }
+        return false;
+    }
+}
+
+bool StockMarketSimulator::sellStock()
+{
+    string username, symbol;
+    int quantity;
+    cout << "Enter your username: ";
+    cin >> username;
+    cout << "Enter stock symbol: ";
+    cin >> symbol;
+    cout << "Enter quantity: ";
+    cin >> quantity;
+    auto userIt = users.find(username);
+    auto stockIt = stocks.find(symbol);
+    if (userIt != users.end() && stockIt != stocks.end())
+    {
+        if (userIt -> second.portfolio[symbol] >= quantity)
+
+        {
+            double totalValue = stockIt -> second.price * quantity;
+            userIt -> second.cashBalance += totalValue;
+            userIt -> second.portfolio[symbol] -= quantity;
+            userIt -> second.transactionHistory.push_back(
+            {
+                symbol,
+                -quantity,
+                stockIt -> second.price,
+                time(nullptr)
+            });
+            cout << "Sale successful." << endl;
+            return true;
+        }
+        else
+        {
+            cout << "Not enough shares." << endl;
+        }
+    }
+    else
+    {
+        cout << "Stock or user not found." << endl;
+    }
+    return false;
+}
+
+void StockMarketSimulator::displayPortfolio()
+{
+    string username;
+    cout << "Enter your username: ";
+    cin >> username;
+    auto it = users.find(username);
+    if (it != users.end())
+    {
+        cout << "Portfolio for " << username << ":" << endl;
+        for (const auto & pair: it -> second.portfolio)
+        {
+            cout << pair.first << " - Quantity: " << pair.second << ", Current Value: $" << fixed << setprecision(2) << (stocks[pair.first].price * pair.second) << endl;
+        }
+        cout << "Cash Balance: $" << fixed << setprecision(2) << it -> second.cashBalance << endl;
+    }
+    else
+    {
+        cout << "User not found." << endl;
+    }
+}
+
+void StockMarketSimulator::calculateProfitLoss()
+{
+    string username;
+    cout << "Enter your username: ";
+    cin >> username;
+    auto it = users.find(username);
+    if (it != users.end())
+    {
+        double totalProfitLoss = 0.0;
+        for (const auto & transaction: it -> second.transactionHistory)
+        {
+            const Stock & stock = stocks[transaction.symbol];
+            double currentValue = stock.price * transaction.quantity;
+            double costBasis = transaction.price * transaction.quantity;
+            totalProfitLoss += currentValue - costBasis;
+        }
+        cout << "Total Profit/Loss for " << username << ": $" << fixed << setprecision(2) << totalProfitLoss << endl;
+    }
+    else
+    {
+        cout << "User not found." << endl;
+    }
+}
+
+void StockMarketSimulator::displayTransactionHistory()
+{
+    string username;
+    cout << "Enter your username: ";
+    cin >> username;
+    auto it = users.find(username);
+    if (it != users.end())
+    {
+        cout << "Transaction history for " << username << ":" << endl;
+        for (const auto & transaction: it -> second.transactionHistory)
+        {
+            cout << "Symbol: " << transaction.symbol << ", Quantity: " << transaction.quantity << ", Price: $" << fixed << setprecision(2) << transaction.price << ", Time: " << ctime( & transaction.timestamp);
+        }
+    }
+    else
+    {
+        cout << "User not found." << endl;
+    }
+}
+
+void StockMarketSimulator::addCashBalance()
+{
+    string username;
+    double amount;
+    cout << "Enter your username: ";
+    cin >> username;
+    cout << "Enter amount to add: $";
+    cin >> amount;
+    auto it = users.find(username);
+    if (it != users.end())
+    {
+        it -> second.cashBalance += amount;
+        cout << "Cash balance updated. New balance: $" << fixed << setprecision(2) << it -> second.cashBalance << endl;
+    }
+    else
+    {
+        cout << "User not found." << endl;
+    }
+}
+
+void StockMarketSimulator::checkCashBalance()
+{
+    string username;
+    cout << "Enter your username: ";
+    cin >> username;
+    auto it = users.find(username);
+    if (it != users.end())
+    {
+        cout << "Cash balance for " << username << ": $" << fixed << setprecision(2) << it -> second.cashBalance << endl;
+    }
+    else
+    {
+        cout << "User not found." << endl;
+    }
+
+}
+
+void StockMarketSimulator::showStockPrice()
+{
+    string symbol;
+    cout << "Enter stock symbol: ";
+    cin >> symbol;
+    auto it = stocks.find(symbol);
+    if (it != stocks.end())
+    {
+        cout << "Current price of " << it -> second.companyName << " (" << symbol << "): $" << fixed << setprecision(2) << it -> second.price << endl;
+    }
+    else
+    {
+        cout << "Stock not found." << endl;
+    }
+}
+
+void StockMarketSimulator::simulatePriceChanges()
+{
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_real_distribution < > dis(-0.1, 0.1); // simulate 10% up or down
+    for (auto & pair: stocks)
+    {
+        double change = pair.second.price * dis(gen);
+        pair.second.price += change;
+    }
+    cout << "Stock prices have changed successfully.";
+
+}
+
+void StockMarketSimulator::addStock(const string & symbol,
+                                    const string & companyName, double price)
+{
+    if (stocks.find(symbol) == stocks.end())
+    {
+        stocks[symbol] =
+        {
+            symbol,
+            companyName,
+            price
+        };
+        cout << "Stock added: " << companyName << " (" << symbol << ") at $" << price << endl;
+    }
+    else
+    {
+        cout << "Stock already exists." << endl;
+    }
+}
+
+bool StockMarketSimulator::validateUser(const string & username,
+                                        const string & password)
+{
+    auto it = users.find(username);
+    if (it != users.end() && it -> second.password == password)
+    {
+        return true;
+    }
+
+    return false;
+
+}
+
+void displayHeader()
+{
+
+    cout << endl;
+    cout << "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *" << endl;
+    cout << "*                    WELCOME TO OUR                           *" << endl;
+    cout << "*                STOCK MARKET SIMULATOR!                      *" << endl;
+    cout << "*                                                             *" << endl;
+    cout << "*                                           Programmed by:    *" << endl;
+    cout << "*                                             VANSH SHARMA    *" << endl;
+    cout << "*                                           YASHVARDHAN ARORA *" << endl;
+    cout << "*                                             ASHWIN SIBY     *" << endl;
+    cout << "*                                                             *" << endl;
+    cout << "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *" << endl;
+}
+
+void StockMarketSimulator::showMainMenu()
+{
+    displayHeader();
+    cout << "1. Register" << endl;
+    cout << "2. Login" << endl;
+    cout << "3. Exit" << endl;
+    cout << "Enter your choice: ";
+}
+
+void StockMarketSimulator::showTradingMenu()
+{
+
+    cout << "\nTrading Menu:" << endl;
+    cout << "1. Buy Stock" << endl;
+    cout << "2. Sell Stock" << endl;
+    cout << "3. Display Portfolio" << endl;
+    cout << "4. Display Transaction History" << endl;
+    cout << "5. Simulate Price Changes" << endl;
+    cout << "6. Logout" << endl;
+    cout << "7. Add Cash Balance" << endl;
+    cout << "8. Check Cash Balance" << endl;
+    cout << "9. Calculate Profit/Loss" << endl;
+    cout << "10. Show Stock Price" << endl;
+    cout << "11. Update Password" << endl;
+    cout << "12. Search user by username" << endl;
+    cout << "Enter your choice: ";
+}
+
+void StockMarketSimulator::updatePassword()
+{
+    string username, newPassword;
+    cout << "Enter your username: ";
+    cin >> username;
+    cout << "Enter new password: ";
+    cin >> newPassword;
+    auto it = users.find(username);
+    if (it != users.end())
+    {
+        it -> second.password = newPassword;
+        cout << "Password successfully updated." << endl;
+    }
+    else
+    {
+        cout << "Username not found." << endl;
+    }
+}
+
+void StockMarketSimulator::searchUserByUsername()
+{
+    string username;
+    cout << "Enter username to search: ";
+    cin >> username;
+    auto it = users.find(username);
+    if (it != users.end())
+    {
+        cout << "Username: " << it -> first << ", Cash Balance: $" << it -> second.cashBalance << endl;
+    }
+    else
+    {
+        cout << "User not found." << endl;
+    }
+}
+
+int main()
+{
+    StockMarketSimulator simulator;
+    simulator.start();
+    return 0;
+}
